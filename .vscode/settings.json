@@ -1,0 +1,6 @@
+{
+    "appmod.enableMcpServer": true,
+    "appmod.javaUpgrade.enableQuickPick": true,
+    "github.copilot.chat.languageContext.inline.typescript.enabled": true,
+    "python.analysis.autoImportCompletions": true
+}
