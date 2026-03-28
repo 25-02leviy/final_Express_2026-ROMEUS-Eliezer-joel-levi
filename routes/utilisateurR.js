@@ -8,34 +8,44 @@ const { protect } = require("../middlewares/authMiddlewares");
 
 const routeur = express.Router();
 
+
 routeur.post(
   "/add",
   registerValidation,
   handleValidationErrors,
-  utilisateurC.ajouteItilisate
+  utilisateurC.ajouteUtilisateur
 );
 routeur.post("/login", utilisateurC.login);
-routeur.get("/all", utilisateurC.aficheyo);
+routeur.get("/me", protect, utilisateurC.profil);
+routeur.get("/all",  utilisateurC.aficheyo);
 routeur.get("/recherche/:telephone", protect, utilisateurC.findOne_tel);
 routeur.get("/recherche/nom/:nom", protect, utilisateurC.findOne_nom);
 routeur.delete("/delete/:telephone", protect, utilisateurC.delete);
 
 module.exports = routeur;
 
-//add
+// add
 // {
 //   "nom": "Romeus Eliezer",
 //   "telephone": 36334731,
 //   "adresse": "pignon",
-//   "password": "passssssss!"
+//   "password": "Passssss1!"
 // }
-//recherche pa tel
-//http://localhost:2502/api/utilisateur/recherche/telephone/:36334731
-//rechech pa non
-//http://localhost:2502/api/utilisateur/recherche/nom/romeus eliezer
-//efase
+// http://localhost:2502/api/utilisateur/add
+// login
+// {
+//   "telephone": 36334731,
+//   "password": "Passssss1!"
+// }
+// http://localhost:2502/api/utilisateur/login
+// profil utilisateur connecte
+// http://localhost:2502/api/utilisateur/me
+// liste utilisateurs
+// http://localhost:2502/api/utilisateur/all
+// recherche par telephone
+// http://localhost:2502/api/utilisateur/recherche/36334731
+//avek kndisyn ke token ou valid
+// recherche par nom
+// http://localhost:2502/api/utilisateur/recherche/nom/Romeus Eliezer
+// suppression
 //http://localhost:2502/api/utilisateur/delete/36334731
-
-
-
-

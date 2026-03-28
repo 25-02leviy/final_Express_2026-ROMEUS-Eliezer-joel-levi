@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const utilisateur = require("../models/utilisateur");
 
+// Middleware de protection des routes privees.
 exports.protect = async (req, res, next) => {
   let token;
 

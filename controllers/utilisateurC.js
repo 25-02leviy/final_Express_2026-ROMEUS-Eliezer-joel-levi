@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const utilisateur = require("../models/utilisateur");
+const asyncHandler = require("../middlewares/asyncHandler");
 
 const getJwtSecret = () => process.env.JWT_SECRET || process.env.TOKEN_SECRET;
 
@@ -22,141 +23,142 @@ const sanitizeUser = (user) => ({
   telephone: user.telephone,
   adresse: user.adresse,
 });
-//ajoute
-exports.ajouteItilisate = async (req, res, next) => {
-  try {
-    const { nom, telephone, adresse, password } = req.body || {};
 
-    if (!nom || !telephone || !adresse || !password) {
-      return res.status(400).json({
-        message: "nom, telephone, adresse et password sont requis",
-      });
-    }
+// Inscription d'un nouvel utilisateur avec retour du token.
+exports.ajouteUtilisateur = asyncHandler(async (req, res) => {
+  const { nom, telephone, adresse, password } = req.body || {};
+  const telephoneNormalise = String(telephone || "").trim();
 
-    const uExist = await utilisateur.findOne({ telephone, nom });
-    const nomExist = await utilisateur.findOne({
-      nom: new RegExp(`^${nom}$`, "i"),
+  if (!nom || !telephoneNormalise || !adresse || !password) {
+    return res.status(400).json({
+      message: "nom, telephone, adresse et password sont requis",
     });
+  }
 
-    if (uExist) {
-      return res.status(409).json({
-        message: "Un utilisateur avec ces numeros existe deja",
-      });
-    }
+  //verifikasyn pou evite redondans
+const utilisateurExistant = await utilisateur.findOne({
+  $or: [
+    { telephone: telephoneNormalise },
+    { nom: nom }
+  ]
+});
 
-    if (nomExist) {
-      return res.status(409).json({
-        message: "Un utilisateur avec ce nom existe deja",
-      });
-    }
-
-    //pou afiche itilisate a ak info li io  apen kew kreyel
-    const nouveauUtilisateur = await utilisateur.create({
-      nom,
-      telephone,
-      adresse,
-      password,
+if (utilisateurExistant) {
+  if (utilisateurExistant.telephone === telephoneNormalise) {
+    return res.status(409).json({
+      message: "Un utilisateur avec ce numero existe deja",
     });
-//token
-    const token = genererToken(nouveauUtilisateur._id);
+  }
 
-    res.status(201).json({
-      message: "Utilisateur ajoute avec succes",
-      token,
-      utilisateur: sanitizeUser(nouveauUtilisateur),
+  if (utilisateurExistant.nom === nom) {
+    return res.status(409).json({
+      message: "Un utilisateur avec ce nom existe deja",
     });
-  } catch (error) {
-    next(error);
   }
-};
+}
 
-//konekte
-exports.login = async (req, res, next) => {
-  try {
-    const { telephone, password } = req.body;
+  // Creation du compte apres verification des donnees.
+  const nouveauUtilisateur = await utilisateur.create({
+    nom,
+    telephone: telephoneNormalise,
+    adresse,
+    password,
+  });
 
-    const user = await utilisateur.findOne({ telephone });
-    if (!user) {
-      return res.status(404).json({ message: "Utilisateur non trouve" });
-    }
+  // Emission du token pour eviter une connexion immediate supplementaire.
+  const token = genererToken(nouveauUtilisateur._id);
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Mot de passe incorrect" });
-    }
+  res.status(201).json({
+    message: "Utilisateur ajoute avec succes",
+    token,
+    utilisateur: sanitizeUser(nouveauUtilisateur),
+  });
+});
 
-    const token = genererToken(user._id);
+// Alias conserve pour ne pas casser d'anciens imports.
+exports.ajouteItilisate = exports.ajouteUtilisateur;
 
-    res.status(200).json({
-      message: "Connexion reussie",
-      token,
-      utilisateur: sanitizeUser(user),
+// Connexion d'un utilisateur existant.
+exports.login = asyncHandler(async (req, res) => {
+  const { telephone, password } = req.body || {};
+  const telephoneNormalise = String(telephone || "").trim();
+
+  if (!telephoneNormalise || !password) {
+    return res.status(400).json({
+      message: "telephone et password sont requis",
     });
-  } catch (error) {
-    next(error);
   }
+
+  const user = await utilisateur.findOne({ telephone: telephoneNormalise });
+  if (!user) {
+    return res.status(404).json({ message: "Utilisateur non trouve" });
+  }
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    return res.status(400).json({ message: "Mot de passe incorrect" });
+  }
+
+  const token = genererToken(user._id);
+
+  res.status(200).json({
+    message: "Connexion reussie",
+    token,
+    utilisateur: sanitizeUser(user),
+  });
+});
+
+// Profil de l'utilisateur connecte.
+exports.profil = async (req, res) => {
+  res.status(200).json({
+    utilisateur: req.user,
+  });
 };
 
-//rechechr tout
-exports.aficheyo = async (req, res, next) => {
-  try {
-    const tout = await utilisateur.find().select("-password");
-    res.status(200).json(tout);
-  } catch (error) {
-    next(error);
+// tout user, san modpass tyo
+exports.aficheyo = asyncHandler(async (req, res) => {
+  const tout = await utilisateur.find().select("-password");
+  res.status(200).json(tout);
+});
+
+// Recherche d'un utilisateur par numero de telephone.
+exports.findOne_tel = asyncHandler(async (req, res) => {
+  const oneUser = await utilisateur
+    .findOne({ telephone: String(req.params.telephone || "").trim() })
+    .select("-password");
+
+  if (!oneUser) {
+    return res.status(404).json({ message: "Utilisateur non trouve" });
   }
-};
 
-//pa tel.
-exports.findOne_tel = async (req, res, next) => {
-  try {
-    const oneUser = await utilisateur
-      .findOne({ telephone: req.params.telephone })
-      .select("-password");
+  res.status(200).json(oneUser);
+});
 
-    if (!oneUser) {
-      return res.status(404).json({ message: "Utilisateur non trouve" });
-    }
+// Recherche d'un utilisateur par nom complet.
+exports.findOne_nom = asyncHandler(async (req, res) => {
+  const oneUser = await utilisateur
+    .findOne({ nom: new RegExp(`^${req.params.nom}$`, "i") })
+    .select("-password");
 
-    res.status(200).json(oneUser);
-  } catch (error) {
-    next(error);
+  if (!oneUser) {
+    return res.status(404).json({ message: "Utilisateur non trouve" });
   }
-};
 
-//pa nom.
-exports.findOne_nom = async (req, res, next) => {
-  try {
-    const oneUser = await utilisateur
-      .findOne({ nom: new RegExp(`^${req.params.nom}$`, "i") })
-      .select("-password");
+  res.status(200).json(oneUser);
+});
 
-    if (!oneUser) {
-      return res.status(404).json({ message: "Utilisateur non trouve" });
-    }
+// Suppression d'un utilisateur par telephone.
+exports.delete = asyncHandler(async (req, res) => {
+  const deleteUser = await utilisateur
+    .findOneAndDelete({ telephone: String(req.params.telephone || "").trim() })
+    .select("-password");
 
-    res.status(200).json(oneUser);
-  } catch (error) {
-    next(error);
+  if (!deleteUser) {
+    return res.status(404).json({ message: "Utilisateur non trouve" });
   }
-};
 
-//efase(telefon)
-exports.delete = async (req, res, next) => {
-  try {
-    const deleteUser = await utilisateur
-      .findOneAndDelete({ telephone: req.params.telephone })
-      .select("-password");
-
-    if (!deleteUser) {
-      return res.status(404).json({ message: "Utilisateur non trouve" });
-    }
-
-    res.status(200).json({
-      message: "Utilisateur supprime avec succes",
-      utilisateur: deleteUser,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  res.status(200).json({
+    message: "Utilisateur supprime avec succes",
+    utilisateur: deleteUser,
+  });
+});

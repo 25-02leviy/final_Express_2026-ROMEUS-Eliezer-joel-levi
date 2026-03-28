@@ -1,34 +1,36 @@
-//importation
+// Importation des dependances principales de l'application.
 const express = require("express");
-const userRoute = require("./routes/utilisateurR");
 const dotenv = require("dotenv");
+const path = require("path");
+const userRoute = require("./routes/utilisateurR");
+const clientRoute = require("./routes/clientR");
+const creditRoute = require("./routes/creditR");
+const paiementRoute = require("./routes/paiementR");
 const Konekte = require("./db/db");
 const errorHandler = require("./middlewares/errorHandler");
-// const postRoute = require("./routes/post.route");
 
-//initialisation
-dotenv.config()
+// Initialisation de l'environnement et du serveur.
+dotenv.config();
 const app = express();
-Konekte(); 
+Konekte();
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 app.use("/api/utilisateur", userRoute);
+app.use("/api/clients", clientRoute);
+app.use("/api/credits", creditRoute);
+app.use("/api/paiements", paiementRoute);
 
-
-// app.use("/api/post", postRoute);
-// app.use("/api/comment", require("./routes/comment.routes"));
+// Route par defaut utile pour un test rapide.
+app.get("/", (req, res) => {
+  res.send("API de gestion des credits en ecoute");
+});
 
 app.use(errorHandler);
 
-//route par defaut
-app.get("/", (req, res) => {
-    res.send("serveur en ecoute ");
-});
-//fichier
-// app.use("/uploads", express.static("uploads"));
-
-//lencement du serveur
+// Lancement du serveur Express.
 app.listen(process.env.PORT, () => {
-    console.log("serveur en ecoute");
+  console.log("serveur en ecoute");
 });
-

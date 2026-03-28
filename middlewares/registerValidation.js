@@ -1,3 +1,4 @@
+// Validation simple des donnees d'inscription.
 const registerValidation = (req, res, next) => {
   const body = req.body || {};
   const { nom, telephone, adresse, password } = body;
@@ -18,6 +19,7 @@ const registerValidation = (req, res, next) => {
   }
 
   const telephoneString = String(telephone || "").trim();
+  //limite tel. de 8 a 11 chif
   if (!telephoneString || !/^\d{8,11}$/.test(telephoneString)) {
     errors.push({
       field: "telephone",
@@ -47,6 +49,7 @@ const registerValidation = (req, res, next) => {
   next();
 };
 
+// Retourne les erreurs de validation sous forme exploitable.
 const handleValidationErrors = (req, res, next) => {
   if (req.validationErrors && req.validationErrors.length > 0) {
     return res.status(400).json({
