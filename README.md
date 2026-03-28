@@ -4,9 +4,9 @@ API Express + MongoDB pour gerer les utilisateurs, les clients, les credits et l
 
 ## Demarrage
 
-```bash
-npm start
-```
+nodemon index.js
+//oubyn 
+node index.js
 
 ## Variables d'environnement
 
@@ -24,16 +24,8 @@ TOKEN_SECRET=romeus_dev_secret_2026
 - Paiements : ajout, historique par credit
 
 ## Format photo client
+jpeg et png
 
-Envoyer `photoBase64` dans le corps JSON lors de la creation d'un client.
+## referans, lyen, avek koman pou lanse l' sou postman nan sou komante anba chak page apropriye nan dosye routes
 
-## Exemple de credit
 
-```json
-{
-  "clientId": "ID_DU_CLIENT",
-  "produit": "ciment",
-  "quantite": 50,
-  "montantTotal": 10000
-}
-```

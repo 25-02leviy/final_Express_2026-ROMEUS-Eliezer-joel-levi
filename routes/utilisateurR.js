@@ -16,7 +16,7 @@ routeur.post(
   utilisateurC.ajouteUtilisateur
 );
 routeur.post("/login", utilisateurC.login);
-routeur.get("/me", protect, utilisateurC.profil);
+routeur.get("/me", protect, utilisateurC.profil);//pou wh enfomasyon sou user ou konekte a men fow t fh login avant🥴
 routeur.get("/all",  utilisateurC.aficheyo);
 routeur.get("/recherche/:telephone", protect, utilisateurC.findOne_tel);
 routeur.get("/recherche/nom/:nom", protect, utilisateurC.findOne_nom);
