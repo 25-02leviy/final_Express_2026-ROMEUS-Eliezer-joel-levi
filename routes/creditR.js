@@ -7,6 +7,8 @@ const routeur = express.Router();
 // Routes de gestion des ventes a credit.
 routeur.post("/", protect, creditC.ajouterCredit);
 routeur.get("/", protect, creditC.listerCredits);
+routeur.get("/payee", protect, creditC.creditsPayee);
+routeur.get("/nonpayee", protect, creditC.creditsNonPayee);
 routeur.get("/:id", protect, creditC.detailCredit);
 
 module.exports = routeur;
@@ -23,4 +25,7 @@ module.exports = routeur;
 // http://localhost:2502/api/credits/
 // detail d'un credit
 // http://localhost:2502/api/credits/ID_DU_CREDIT
-
+// credits payees
+// http://localhost:2502/api/credits/payee
+// credits non payees
+// http://localhost:2502/api/credits/nonpayee

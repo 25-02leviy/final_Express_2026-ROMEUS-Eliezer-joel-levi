@@ -1,6 +1,9 @@
 # API Gestion Credits Materiaux
 
-API Express + MongoDB pour gerer les utilisateurs, les clients, les credits et les paiements.
+API Express, MongoDB pour gerer les utilisateurs, les clients, les credits et les paiements.
+les noms des materiaux ne sont pas statique
+les token sont esentyel pou fh tout bagay, sof pou kreye on kon utilisateur, epi wh tout itilisate yo
+
 
 ## Demarrage
 
@@ -19,7 +22,7 @@ TOKEN_SECRET=romeus_dev_secret_2026
 ## Fonctionnalites
 
 - Authentification : inscription, connexion, profil utilisateur
-- Clients : ajout, liste, suppression, photo en Base64
+- Clients : ajout, liste, suppression, photo
 - Credits : creation, liste, detail, reste a payer
 - Paiements : ajout, historique par credit
 

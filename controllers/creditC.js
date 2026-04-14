@@ -2,6 +2,7 @@ const Client = require("../models/client");
 const Credit = require("../models/credit");
 const Paiement = require("../models/paiement");
 const asyncHandler = require("../middlewares/asyncHandler");
+const mongoose = require("mongoose");
 
 // Creation d'une vente a credit pour un client existant.
 exports.ajouterCredit = asyncHandler(async (req, res) => {
@@ -72,6 +73,10 @@ exports.listerCredits = asyncHandler(async (req, res) => {
 exports.detailCredit = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "ID invalide" });
+  }
+
   const credit = await Credit.findOne({
     _id: id,
     utilisateur: req.user._id,
@@ -89,5 +94,35 @@ exports.detailCredit = asyncHandler(async (req, res) => {
   res.status(200).json({
     credit,
     paiements,
+  });
+});
+
+// Liste des credits totalement payes.
+exports.creditsPayee = asyncHandler(async (req, res) => {
+  const credits = await Credit.find({
+    utilisateur: req.user._id,
+    statut: "SOLDE",
+  })
+    .populate("client", "nom telephone adresse photo")
+    .sort({ createdAt: -1 });
+
+  res.status(200).json({
+    total: credits.length,
+    credits,
+  });
+});
+
+// Liste des credits avec un reste a payer.
+exports.creditsNonPayee = asyncHandler(async (req, res) => {
+  const credits = await Credit.find({
+    utilisateur: req.user._id,
+    statut: { $in: ["EN_ATTENTE", "PARTIEL"] },
+  })
+    .populate("client", "nom telephone adresse photo")
+    .sort({ createdAt: -1 });
+
+  res.status(200).json({
+    total: credits.length,
+    credits,
   });
 });

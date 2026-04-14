@@ -1,6 +1,7 @@
 const Credit = require("../models/credit");
 const Paiement = require("../models/paiement");
 const asyncHandler = require("../middlewares/asyncHandler");
+const mongoose = require("mongoose");
 
 const calculerStatut = (resteAPayer, montantTotal) => {
   if (resteAPayer <= 0) {
@@ -14,7 +15,7 @@ const calculerStatut = (resteAPayer, montantTotal) => {
   return "EN_ATTENTE";
 };
 
-// Ajout d'un paiement sur un credit existant.
+// Ajout d'un paiement sur un credit 
 exports.ajouterPaiement = asyncHandler(async (req, res) => {
   const { creditId, montant, note, datePaiement } = req.body || {};
 
@@ -22,6 +23,10 @@ exports.ajouterPaiement = asyncHandler(async (req, res) => {
     return res.status(400).json({
       message: "creditId et montant sont requis",
     });
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(creditId)) {
+    return res.status(400).json({ message: "ID invalide" });
   }
 
   const credit = await Credit.findOne({
@@ -71,6 +76,10 @@ exports.ajouterPaiement = asyncHandler(async (req, res) => {
 // Historique complet des paiements d'un credit.
 exports.historiquePaiements = asyncHandler(async (req, res) => {
   const { creditId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(creditId)) {
+    return res.status(400).json({ message: "ID invalide" });
+  }
 
   const credit = await Credit.findOne({
     _id: creditId,
